@@ -26,3 +26,14 @@ MCoffee is an iOS application for logging coffee brewing details. It allows user
 
 *   Ensure you have XcodeGen and CocoaPods installed.
 *   The project requires Xcode and the iOS SDK.
+
+## Screenshots
+
+![Log List View](screenshots/logs.png)
+*Log List View*
+
+![Add/Edit Log View](screenshots/editlog.png)
+*Add/Edit Log View*
+
+![Log Detail View](screenshots/viewlog.png)
+*Log Detail View*
