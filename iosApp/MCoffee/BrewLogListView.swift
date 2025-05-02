@@ -6,40 +6,41 @@ struct BrewLogListView: View {
     
     // Add state for presenting sheet
     @State private var isPresentingAddSheet = false
+    // State to track the log selected for navigation
+    @State private var selectedLogForNavigation: BrewLog? = nil
 
     var body: some View {
-        // Remove NavigationView wrapper
-        ScrollView { // ScrollView starts here
-            LazyVStack(spacing: 15) { // LazyVStack for efficient vertical layout, add spacing between cards
-                ForEach(viewModel.brewLogs) { log in
-                    // Wrap the row in a NavigationLink
-                    NavigationLink(destination: 
-                        BrewLogDetailView(log: log)
-                            .environmentObject(viewModel) // Explicitly pass the environment object
-                    ) {
-                        BrewLogCardView(log: log)
-                            .padding(.horizontal) // Add horizontal padding to cards
+        // Use List for better swipe-to-delete integration
+        List {
+            ForEach(viewModel.brewLogs) { log in
+                BrewLogCardView(log: log)
+                    .contentShape(Rectangle()) // Make the whole area tappable (Re-enabled)
+                    .onTapGesture {              // Re-enabled tap gesture
+                        selectedLogForNavigation = log
                     }
-                    .buttonStyle(PlainButtonStyle()) // Prevents the entire card from looking like a button
-                }
             }
-            .padding(.top) // Add padding at the top of the stack
-            .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure ScrollView has a frame for the overlay
-            .overlay {
-                if viewModel.brewLogs.isEmpty {
-                    ContentUnavailableView(
-                        "No Brew Logs Yet",
-                        systemImage: "cup.and.saucer.fill",
-                        description: Text("Tap the + button to add your first brew log.")
-                    )
-                }
+            .onDelete(perform: viewModel.deleteLog) // Add swipe-to-delete
+        }
+        .listStyle(.plain) // Use plain style to remove default list background/insets
+        .overlay {
+            if viewModel.brewLogs.isEmpty {
+                ContentUnavailableView(
+                    "No Brew Logs Yet",
+                    systemImage: "cup.and.saucer.fill",
+                    description: Text("Tap the + button to add your first brew log.")
+                )
             }
-            .sheet(isPresented: $isPresentingAddSheet) {
-                // Pass the viewModel for adding a new log
-                AddBrewLogView(viewModel: viewModel)
-            }
-        } // ScrollView ends here
-        // Apply navigation title and toolbar to the ScrollView
+        }
+        .sheet(isPresented: $isPresentingAddSheet) {
+            // Pass the viewModel for adding a new log
+            AddBrewLogView(viewModel: viewModel)
+        }
+        // Move navigation destination to the List
+        .navigationDestination(item: $selectedLogForNavigation) { log in
+            BrewLogDetailView(log: log)
+                .environmentObject(viewModel) // Pass environment object to the destination
+        }
+        // Apply navigation title and toolbar to the List
         .navigationTitle("Brew Logs")
         .toolbar { 
             ToolbarItem(placement: .navigationBarTrailing) {

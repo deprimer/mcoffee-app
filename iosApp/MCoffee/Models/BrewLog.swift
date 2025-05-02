@@ -2,7 +2,7 @@ import Foundation
 
 // Basic Swift representation of a Brew Log
 // We'll add more properties and persistence logic later
-struct BrewLog: Identifiable, Codable { // Add Codable back for persistence
+struct BrewLog: Identifiable, Codable, Hashable { // Add Codable back for persistence
     let id: UUID // Using UUID for local identification
     var timestamp: Date
     var coffeeName: String

@@ -13,7 +13,7 @@ class BrewLogViewModel: ObservableObject {
     
     // Key for UserDefaults
     private let userDefaultsKey = "brewLogsData"
-    
+        
     init() {
         // Load saved logs on initialization
         loadLogs()
