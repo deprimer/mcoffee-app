@@ -1,0 +1,51 @@
+# General
+.DS_Store
+*.iml
+.idea/
+.gradle/
+build/
+local.properties
+
+# Kotlin Multiplatform
+shared/build/
+shared/.gradle/
+*.klib
+
+# Xcode
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.app
+
+# Xcode - Precompiled Headers
+*.pch
+
+# Xcode - Compatibility
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.pbxuser
+
+# CocoaPods
+Pods/
+**/Pods/
+Podfile.lock
+
+# Carthage
+Carthage/
+
+# Secrets - Exclude sensitive information
+**/secrets.properties
+**/api_keys.json
+
+# Specific Files
+.swiftpm/
+.build/
+*.swp
+*~
+*.orig

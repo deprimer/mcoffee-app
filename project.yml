@@ -1,0 +1,32 @@
+name: MCoffee
+options:
+  bundleIdPrefix: com.mcoffee
+  deploymentTarget:
+    iOS: 18.0
+
+targets:
+  MCoffee:
+    type: application
+    platform: iOS
+    sources:
+      - iosApp/MCoffee # XcodeGen should find files recursively
+    info:
+      path: iosApp/MCoffee/Info.plist
+      properties:
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchStoryboardName: ""
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default Configuration
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+    settings:
+      base:
+        INFOPLIST_FILE: iosApp/MCoffee/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.mcoffee.MCoffee
+        PRODUCT_NAME: MCoffee
+        SWIFT_VERSION: "6.0" # Update to match Xcode 16/iOS 18
+        TARGETED_DEVICE_FAMILY: 1 # iPhone only
+        DEVELOPMENT_TEAM: "" # Add your team ID here
