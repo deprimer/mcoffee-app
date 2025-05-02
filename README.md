@@ -29,11 +29,11 @@ MCoffee is an iOS application for logging coffee brewing details. It allows user
 
 ## Screenshots
 
-![Log List View](screenshots/logs.png)
+<img src="screenshots/logs.png" width="300">
 *Log List View*
 
-![Add/Edit Log View](screenshots/editlog.png)
+<img src="screenshots/editlog.png" width="300">
 *Add/Edit Log View*
 
-![Log Detail View](screenshots/viewlog.png)
+<img src="screenshots/viewlog.png" width="300">
 *Log Detail View*
