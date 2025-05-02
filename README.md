@@ -2,33 +2,30 @@
 
 MCoffee is an iOS application built with Kotlin Multiplatform (KMP) for logging coffee brewing details. It allows users to track parameters like coffee name, dose, water amount, brew time, grind setting, method, and more.
 
-## Technologies Used
+## Technologies Used (Current State)
 
-*   **Shared Logic:** Kotlin Multiplatform (KMP)
+*   **Project Foundation:** Kotlin Multiplatform (KMP) (Shared logic not yet implemented for core features)
 *   **iOS Frontend:** SwiftUI
-*   **Database:** SQLDelight
+*   **Log Persistence:** `UserDefaults` (within the iOS app)
 *   **iOS Project Generation:** XcodeGen
 *   **iOS Dependency Management:** CocoaPods
 
 ## Build & Run Instructions
 
-1.  **Generate Shared Framework:**
+1.  **(Optional) Generate KMP Shared Framework (if using shared module):**
     ```bash
     ./gradlew :shared:generateDummyFramework :shared:podspec
     ```
-2.  **Generate Xcode Project:**
+2.  **Generate Xcode Project (Required):**
     ```bash
     xcodegen generate
     ```
-3.  **Install Pods:**
+3.  **Install Pods (Required):**
     ```bash
     pod install --repo-update
     ```
     *(Note: You might need `arch -x86_64 pod install --repo-update` on Apple Silicon Macs if you encounter pod install issues).*
-4.  **Open Xcode:**
-    Open the generated `MCoffee.xcworkspace` file in Xcode.
-5.  **Build & Run:**
-    Select the `MCoffee` scheme and run on a simulator or a connected device.
+4.  **Open & Run:** Open `MCoffee.xcworkspace` in Xcode and build/run the `MCoffee` scheme.
 
 ## Notes
 
