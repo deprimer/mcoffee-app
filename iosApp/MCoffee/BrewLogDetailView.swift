@@ -4,34 +4,58 @@ struct BrewLogDetailView: View {
     @EnvironmentObject var viewModel: BrewLogViewModel
     @State private var isPresentingEditSheet = false
 
-    let log: BrewLog
+    private let logID: UUID
+
+    private var log: BrewLog {
+        guard let foundLog = viewModel.brewLogs.first(where: { $0.id == logID }) else {
+            fatalError("Log not found")
+        }
+        return foundLog
+    }
+
+    init(log: BrewLog) {
+        self.logID = log.id
+    }
 
     var body: some View {
         Form {
             Section("Coffee Details") {
                 HStack {
-                    Label("Name", systemImage: "cup.and.saucer")
+                    Text("Coffee Name")
                     Spacer()
                     Text(log.coffeeName)
                         .foregroundColor(.secondary)
                 }
-                HStack {
-                    Label("Roast Level", systemImage: "flame")
-                    Spacer()
-                    Text(log.roastLevel.capitalized)
-                        .foregroundColor(.secondary)
-                }
-                HStack {
-                    Label("Date", systemImage: "calendar")
-                    Spacer()
-                    Text(log.timestamp.formatted(date: .abbreviated, time: .shortened))
-                        .foregroundColor(.secondary)
+                if !log.roastLevel.isEmpty {
+                    HStack {
+                        Label("Roast Level", systemImage: "flame")
+                        Spacer()
+                        Text(log.roastLevel)
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
 
-            Section("Brewing Parameters") {
+            Section("Grinder") {
                 HStack {
-                    Label("Method", systemImage: "timer") // Using timer as placeholder
+                    Label("Grinder Name", systemImage: "gearshape.2")
+                    Spacer()
+                    Text(log.grinderType)
+                        .foregroundColor(.secondary)
+                }
+                if !log.grindSetting.isEmpty {
+                    HStack {
+                        Label("Grind Setting", systemImage: "gearshape")
+                        Spacer()
+                        Text(log.grindSetting)
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+
+            Section("Brew Parameters") {
+                HStack {
+                    Label("Method", systemImage: "timer")
                     Spacer()
                     Text(log.method.capitalized)
                         .foregroundColor(.secondary)
@@ -43,9 +67,9 @@ struct BrewLogDetailView: View {
                         .foregroundColor(.secondary)
                 }
                 HStack {
-                    Label("Grind Setting", systemImage: "gearshape.2") // Placeholder icon
+                    Label("Ratio", systemImage: "scalemass.fill")
                     Spacer()
-                    Text(log.grindSetting)
+                    Text("1:\(Int(log.waterAmount / log.dose))")
                         .foregroundColor(.secondary)
                 }
                 HStack {
@@ -54,50 +78,41 @@ struct BrewLogDetailView: View {
                     Text("\(log.waterAmount, specifier: "%.1f") ml")
                         .foregroundColor(.secondary)
                 }
-                HStack {
-                    Label("Water Temp", systemImage: "thermometer.medium")
-                    Spacer()
-                    if let temp = log.waterTemperature {
+                if let temp = log.waterTemperature {
+                    HStack {
+                        Label("Water Temp", systemImage: "thermometer.medium")
+                        Spacer()
                         Text("\(temp, specifier: "%.1f")°\(log.temperatureUnit == "celsius" ? "C" : "F")")
-                           .foregroundColor(.secondary)
-                    } else {
-                        Text("N/A").foregroundColor(.secondary)
+                            .foregroundColor(.secondary)
                     }
                 }
-                HStack {
-                    Label("Brew Time", systemImage: "hourglass")
-                    Spacer()
-                    Text(formatBrewTime(log.brewTime))
-                        .foregroundColor(.secondary)
+                if let brewTime = log.brewTime {
+                    HStack {
+                        Label("Brew Time", systemImage: "hourglass")
+                        Spacer()
+                        Text(formatBrewTime(brewTime))
+                            .foregroundColor(.secondary)
+                    }
                 }
             }
 
             Section("Notes & Rating") {
-                HStack {
-                    Label("Rating", systemImage: "star")
-                    Spacer()
-                    if let rating = log.rating {
+                if let rating = log.rating {
+                    HStack {
+                        Label("Rating", systemImage: "star")
+                        Spacer()
                         Text("\(rating)/5")
-                           .foregroundColor(.secondary)
-                    } else {
-                        Text("N/A").foregroundColor(.secondary)
+                            .foregroundColor(.secondary)
                     }
                 }
-                // Display Notes if they exist
                 if let notes = log.notes, !notes.isEmpty {
-                    VStack(alignment: .leading) { // Use VStack for multi-line notes
+                    VStack(alignment: .leading) {
                         Label("Notes", systemImage: "note.text")
                         Text(notes)
                             .foregroundColor(.secondary)
                             .padding(.top, 2)
                     }
-                } else {
-                     HStack {
-                         Label("Notes", systemImage: "note.text")
-                         Spacer()
-                         Text("N/A").foregroundColor(.secondary)
-                     }
-                 }
+                }
             }
         }
         .navigationTitle("Log Details")

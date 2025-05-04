@@ -1,225 +1,246 @@
 import SwiftUI
 
 struct AddBrewLogView: View {
-    // Change from EnvironmentObject to ObservedObject
     @ObservedObject var viewModel: BrewLogViewModel
     @Environment(\.dismiss) var dismiss
+    @State private var logToEdit: BrewLog?
 
-    // Optional log to edit
-    let logToEdit: BrewLog?
+    init(viewModel: BrewLogViewModel, logToEdit: BrewLog? = nil) {
+        self.viewModel = viewModel
+        self._logToEdit = State(initialValue: logToEdit)
+    }
 
-    // State variables for form fields
     @State private var coffeeName: String = ""
     @State private var doseString: String = ""
     @State private var grindSetting: String = ""
+    @State private var roastLevel: String = RoastLevel.light.rawValue
+    @State private var showGrindSetting = false
     @State private var waterAmountString: String = ""
-    @State private var selectedMethod: BrewMethod = .pourOver
-    @State private var selectedRoastLevel: RoastLevel = .medium
+    @State private var selectedMethod: String = "pourOver"
     @State private var waterTemperatureString: String = ""
     @State private var selectedTempUnit: TemperatureUnit = .celsius
     @State private var brewTimeString: String = ""
     @State private var notes: String = ""
     @State private var timestamp: Date = Date()
-    // Non-optional state for Stepper binding
     @State private var stepperRating: Int = 3
+    @State private var selectedRatio: Double = 15.0
+    @State private var grinderType: String = "Fellow Ode"
 
-    // Determine if we are editing or adding
     var isEditing: Bool {
         logToEdit != nil
     }
 
-    // Computed property to check if the form is valid (basic check)
     var isFormValid: Bool {
         !coffeeName.isEmpty &&
         Double(doseString) != nil &&
-        !grindSetting.isEmpty &&
-        Double(waterAmountString) != nil &&
+        (waterAmountString.isEmpty || Double(waterAmountString) != nil) &&
         (waterTemperatureString.isEmpty || Double(waterTemperatureString) != nil) &&
-        (brewTimeString.isEmpty || parseMMSS(brewTimeString) != nil)
-    }
-
-    // Helper function to format total seconds into MM:SS string
-    private func formatSecondsToMMSS(_ totalSeconds: Double) -> String {
-        let minutes = Int(totalSeconds) / 60
-        let seconds = Int(totalSeconds) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
-    }
-
-    // Helper function to parse MM:SS string into total seconds
-    private func parseMMSS(_ timeString: String) -> Double? {
-        let components = timeString.split(separator: ":")
-        guard components.count == 2,
-              let minutes = Int(components[0]),
-              let seconds = Int(components[1]) else {
-            return nil // Invalid format
-        }
-        guard minutes >= 0 && seconds >= 0 && seconds < 60 else {
-            return nil // Invalid values
-        }
-        return Double(minutes * 60 + seconds)
-    }
-
-    // Initializer
-    init(viewModel: BrewLogViewModel, logToEdit: BrewLog? = nil) { // Add viewModel parameter
-        self.viewModel = viewModel // Assign passed viewModel
-        self.logToEdit = logToEdit
-
-        // Initialize state based on logToEdit or defaults
-        _timestamp = State(initialValue: logToEdit?.timestamp ?? Date())
-        _coffeeName = State(initialValue: logToEdit?.coffeeName ?? "")
-        // Safely initialize doseString and waterAmountString
-        _doseString = State(initialValue: logToEdit != nil ? String(format: "%.1f", logToEdit!.dose) : "")
-        _grindSetting = State(initialValue: logToEdit?.grindSetting ?? "")
-        _waterAmountString = State(initialValue: logToEdit != nil ? String(format: "%.1f", logToEdit!.waterAmount) : "")
-        _selectedMethod = State(initialValue: BrewMethod(rawValue: logToEdit?.method ?? BrewMethod.pourOver.rawValue) ?? .pourOver)
-        _selectedRoastLevel = State(initialValue: RoastLevel(rawValue: logToEdit?.roastLevel ?? RoastLevel.medium.rawValue) ?? .medium)
-        // Initialize waterTemperatureString safely
-        _waterTemperatureString = State(initialValue: logToEdit?.waterTemperature != nil ? String(format: "%.1f", logToEdit!.waterTemperature!) : "")
-        _selectedTempUnit = State(initialValue: TemperatureUnit(rawValue: logToEdit?.temperatureUnit ?? TemperatureUnit.celsius.rawValue) ?? .celsius)
-        // Initialize brewTimeString safely
-        _brewTimeString = State(initialValue: logToEdit?.brewTime != nil ? formatSecondsToMMSS(logToEdit!.brewTime!) : "")
-        _notes = State(initialValue: logToEdit?.notes ?? "")
-        // Use the optional rating, default to 3 if nil or adding
-        _stepperRating = State(initialValue: logToEdit?.rating ?? 3)
+        (brewTimeString.isEmpty || isValidMMSS(brewTimeString))
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             Form {
                 Section("Coffee Details") {
-                    TextField("Coffee Name", text: $coffeeName)
-                    Picker("Roast Level", selection: $selectedRoastLevel) {
+                    HStack {
+                        Text("Coffee Name")
+                        Spacer()
+                        TextField("Enter Coffee Name", text: $coffeeName)
+                            .multilineTextAlignment(.trailing)
+                        Menu {
+                            ForEach(viewModel.brewLogs.map { $0.coffeeName }.unique(), id: \.self) { name in
+                                Button(name) { coffeeName = name }
+                            }
+                        } label: {
+                            Image(systemName: "chevron.down.circle")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    Picker("Roast Level", selection: $roastLevel) {
                         ForEach(RoastLevel.allCases) { level in
-                            Text(level.rawValue.capitalized).tag(level)
+                            Text(level.rawValue).tag(level.rawValue)
                         }
                     }
                 }
-                
+                Section("Grinder") {
+                    Picker("Grinder Name", selection: $grinderType) {
+                        Text("Fellow Ode").tag("Fellow Ode")
+                        Text("Comandante").tag("Comandante")
+                        Text("Hario").tag("Hario")
+                    }
+                    TextField("Grind Setting (Optional)", text: $grindSetting)
+                }
                 Section("Brew Parameters") {
                     Picker("Method", selection: $selectedMethod) {
-                        ForEach(BrewMethod.allCases) { method in
-                            Text(method.rawValue.capitalized).tag(method)
-                        }
+                        Text("Aeropress").tag("aeropress")
+                        Text("Cold Brew").tag("coldBrew")
+                        Text("Espresso").tag("espresso")
+                        Text("French Press").tag("frenchPress")
+                        Text("Kalita").tag("kalita")
+                        Text("Moka Pot").tag("mokaPot")
+                        Text("Pour Over").tag("pourOver")
+                        Text("Pulsar").tag("pulsar")
+                        Text("Siphon").tag("siphon")
+                        Text("Turkish").tag("turkish")
+                        Text("V60").tag("v60")
+                        Text("Add New...").tag("Add New...")
                     }
+                    .onChange(of: selectedMethod) { _, newValue in
+                        if newValue == "Add New..." { selectedMethod = "" }
+                    }
+                    Picker("Ratio", selection: $selectedRatio) {
+                        Text("1:15").tag(15.0)
+                        Text("1:16").tag(16.0)
+                        Text("1:17").tag(17.0)
+                    }
+                    .onChange(of: doseString) { _, _ in updateWaterAmount() }
+                    .onChange(of: selectedRatio) { _, _ in updateWaterAmount() }
                     HStack {
                         Text("Dose (g)")
-                        TextField("e.g., 18.0", text: $doseString)
+                        Spacer()
+                        TextField("", text: $doseString)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                     }
-                    TextField("Grind Setting", text: $grindSetting)
                     HStack {
-                        Text("Water Amount (ml)")
-                        TextField("e.g., 250", text: $waterAmountString)
+                        Text("Water Volume (g)")
+                        Spacer()
+                        TextField("", text: $waterAmountString)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                     }
-                    Picker("Roast Level", selection: $selectedRoastLevel) {
-                        ForEach(RoastLevel.allCases) { level in
-                            Text(level.rawValue).tag(level)
-                        }
+                    HStack {
+                        Text("Brew Time (MM:SS)")
+                        Spacer()
+                        TextField("MM:SS", text: $brewTimeString)
+                            .keyboardType(.numbersAndPunctuation)
+                            .multilineTextAlignment(.trailing)
                     }
                     HStack {
                         Text("Water Temp")
+                        Spacer()
                         TextField("Optional", text: $waterTemperatureString)
                             .keyboardType(.decimalPad)
                             .multilineTextAlignment(.trailing)
                         Picker("Unit", selection: $selectedTempUnit) {
                             ForEach(TemperatureUnit.allCases) { unit in
-                                Text(unit.rawValue.prefix(1)).tag(unit) // Show C or F
+                                Text(unit.rawValue.prefix(1)).tag(unit)
                             }
                         }
                         .pickerStyle(.segmented)
-                        .frame(maxWidth: 100) // Constrain width for segmented picker
-                    }
-                    HStack {
-                        Text("Brew Time (sec)")
-                        TextField("Optional", text: $brewTimeString)
-                            .keyboardType(.numberPad)
-                            .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 100)
                     }
                     DatePicker("Date", selection: $timestamp, displayedComponents: [.date, .hourAndMinute])
                 }
-                
                 Section("Notes & Rating") {
-                    TextField("Tasting Notes", text: $notes, axis: .vertical)
-                        .lineLimit(3...)
-                    // Bind Stepper to the non-optional state variable
-                    Stepper("Rating: \(stepperRating)/5", value: $stepperRating, in: 1...5)
+                    TextField("Notes", text: $notes)
+                        .multilineTextAlignment(.trailing)
+                    Stepper(value: $stepperRating, in: 1...5) {
+                        HStack {
+                            Text("Rating")
+                            Spacer()
+                            Text("\(stepperRating)")
+                        }
+                    }
                 }
             }
-            .navigationTitle(isEditing ? "Edit Brew Log" : "Add Brew Log") // Dynamic title
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle(isEditing ? "Edit Brew Log" : "Add Brew Log")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+                    Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        print("--- Save Action Started ---")
-                        print("Raw Inputs: dose='\(doseString)', waterAmount='\(waterAmountString)', grind='\(grindSetting)', waterTemp='\(waterTemperatureString)', brewTime='\(brewTimeString)'")
-                        
-                        // Convert string inputs to appropriate types
-                        guard let dose = Double(doseString), let waterAmount = Double(waterAmountString) else {
-                            // This should ideally be handled by isFormValid, but good to double-check
-                            print("Error: Invalid numeric input for dose or waterAmount.")
-                            return
-                        }
-                        
-                        let waterTemperature = Double(waterTemperatureString) // Optional
-                        // Use parseMMSS for brew time
-                        let brewTime = parseMMSS(brewTimeString) // Optional Double
-                        
-                        print("Parsed Values: dose=\(dose), waterAmount=\(waterAmount), grind='\(grindSetting)', waterTemp=\(waterTemperature ?? -1), brewTime=\(brewTime ?? -1), rating=\(stepperRating)")
-                        
-                        // Create the new BrewLog instance
-                        print("Creating BrewLog instance...")
-                        let newLog = BrewLog(
-                            id: logToEdit?.id ?? UUID(), // Use existing ID if editing
-                            timestamp: timestamp, // Use the state variable
-                            coffeeName: coffeeName,
-                            dose: dose,
-                            grindSetting: grindSetting,
-                            waterAmount: waterAmount,
-                            method: selectedMethod.rawValue,
-                            roastLevel: selectedRoastLevel.rawValue,
-                            waterTemperature: waterTemperature,
-                            // Pass unit only if temperature exists, matching BrewLog's String? type
-                            temperatureUnit: waterTemperature != nil ? selectedTempUnit.rawValue : nil,
-                            brewTime: brewTime,
-                            notes: notes.isEmpty ? nil : notes, // Store nil if notes are empty
-                            // Use the non-optional value from the stepper for saving
-                            rating: self.stepperRating
-                        )
-                        
-                        // Add or update the log using the ViewModel
-                        if isEditing {
-                            print("Calling viewModel.updateLog for ID: \(newLog.id)")
-                            viewModel.updateLog(newLog)
-                            print("viewModel.updateLog finished")
-                        } else {
-                            print("Calling viewModel.addBrewLog")
-                            viewModel.addBrewLog(newLog) // Correct function name from ViewModel
-                            print("viewModel.addBrewLog finished")
-                        }
-                        
-                        print("Dismissing AddBrewLogView...")
-                        // Dismiss the view
-                        dismiss()
-                    }
-                    .disabled(!isFormValid) // Keep disable logic
+                    Button(isEditing ? "Save" : "Add") { saveBrewLog() }
+                        .disabled(!isFormValid)
                 }
             }
         }
+        .onAppear {
+            if let log = logToEdit {
+                coffeeName = log.coffeeName
+                doseString = String(format: "%.1f", log.dose)
+                grindSetting = log.grindSetting
+                waterAmountString = String(format: "%.1f", log.waterAmount)
+                selectedMethod = log.method
+                roastLevel = log.roastLevel
+                waterTemperatureString = log.waterTemperature.map { String(format: "%.1f", $0) } ?? ""
+                selectedTempUnit = TemperatureUnit(rawValue: log.temperatureUnit ?? "celsius") ?? .celsius
+                brewTimeString = log.brewTime.map { formatTime($0) } ?? ""
+                notes = log.notes ?? ""
+                timestamp = log.timestamp
+                stepperRating = log.rating ?? 3
+                selectedRatio = log.waterAmount / log.dose
+                grinderType = log.grinderType
+            }
+        }
+    }
+
+    private func updateWaterAmount() {
+        if let dose = Double(doseString) {
+            let calculatedAmount = dose * selectedRatio
+            waterAmountString = String(format: "%.1f", calculatedAmount)
+        }
+    }
+
+    private func parseMMSS(_ timeString: String) -> Double? {
+        let components = timeString.split(separator: ":")
+        guard components.count == 2,
+              let minutes = Double(components[0]),
+              let seconds = Double(components[1]),
+              seconds < 60 else {
+            return nil // Invalid format
+        }
+        return minutes * 60 + seconds
+    }
+
+    private func isValidMMSS(_ timeString: String) -> Bool {
+        guard timeString.isEmpty == false else { return true }
+        return parseMMSS(timeString) != nil
+    }
+
+    private func formatTime(_ seconds: Double) -> String {
+        let minutes = Int(seconds / 60)
+        let remainingSeconds = Int(seconds.truncatingRemainder(dividingBy: 60))
+        return String(format: "%02d:%02d", minutes, remainingSeconds)
+    }
+
+    private func saveBrewLog() {
+        guard isFormValid else {
+            // Handle invalid form
+            return
+        }
+
+        // Create or update BrewLog instance
+        let newLog = BrewLog(
+            id: logToEdit?.id ?? UUID(),
+            timestamp: timestamp,
+            coffeeName: coffeeName,
+            dose: Double(doseString) ?? 0.0,
+            grindSetting: grindSetting,
+            waterAmount: Double(waterAmountString) ?? 0.0,
+            method: selectedMethod,
+            roastLevel: roastLevel,
+            waterTemperature: Double(waterTemperatureString),
+            temperatureUnit: waterTemperatureString.isEmpty ? nil : selectedTempUnit.rawValue,
+            brewTime: brewTimeString.isEmpty ? nil : parseMMSS(brewTimeString),
+            notes: notes.isEmpty ? nil : notes,
+            rating: stepperRating,
+            grinderType: grinderType
+        )
+
+        if isEditing {
+            viewModel.updateLog(newLog)
+        } else {
+            viewModel.addBrewLog(newLog)
+        }
+
+        dismiss()
     }
 }
 
-// Preview Provider
-struct AddBrewLogView_Previews: PreviewProvider {
-    static var previews: some View {
-        // Create a sample ViewModel for the preview
-        AddBrewLogView(viewModel: BrewLogViewModel(), logToEdit: BrewLog(coffeeName: "Preview Edit", dose: 15.0, grindSetting: "Fine", waterAmount: 250, method: "Aeropress", roastLevel: "Light", waterTemperature: 92.0, temperatureUnit: "C", brewTime: 120.0, notes: "Editing preview notes", rating: 5))
+extension Array where Element: Hashable {
+    func unique() -> [Element] {
+        var set = Set<Element>()
+        return filter { set.insert($0).inserted }
     }
 }

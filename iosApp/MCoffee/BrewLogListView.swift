@@ -12,7 +12,7 @@ struct BrewLogListView: View {
     var body: some View {
         // Use List for better swipe-to-delete integration
         List {
-            ForEach(viewModel.brewLogs) { log in
+            ForEach(viewModel.brewLogs.sorted(by: { $0.timestamp > $1.timestamp })) { log in
                 BrewLogCardView(log: log)
                     .contentShape(Rectangle()) // Make the whole area tappable (Re-enabled)
                     .onTapGesture {              // Re-enabled tap gesture
@@ -33,7 +33,7 @@ struct BrewLogListView: View {
         }
         .sheet(isPresented: $isPresentingAddSheet) {
             // Pass the viewModel for adding a new log
-            AddBrewLogView(viewModel: viewModel)
+            AddBrewLogView(viewModel: viewModel, logToEdit: nil)
         }
         // Move navigation destination to the List
         .navigationDestination(item: $selectedLogForNavigation) { log in

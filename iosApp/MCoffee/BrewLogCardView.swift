@@ -41,7 +41,12 @@ struct BrewLogCardView: View {
                 // Display Brew Method (No specific icon yet, consider adding later)
                 HStack(spacing: 4) {
                     Image(systemName: "timer")
-                    Text("Method: \(log.method.capitalized)")
+                    Text("\(log.method.capitalized)")
+                }
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "scalemass.fill")
+                    Text("1:\(Int(log.waterAmount / log.dose))")
                 }
 
                 Spacer() // Push parameters to the left

@@ -16,9 +16,10 @@ struct BrewLog: Identifiable, Codable, Hashable { // Add Codable back for persis
     var brewTime: Double? // in seconds
     var notes: String? 
     var rating: Int? // e.g., 1-5 stars
+    var grinderType: String = "Fellow Ode"
     
     // Placeholder initializer
-    init(id: UUID = UUID(), timestamp: Date = Date(), coffeeName: String = "Sample Coffee", dose: Double = 18.0, grindSetting: String = "Medium", waterAmount: Double = 250.0, method: String = "pourOver", roastLevel: String = "medium", waterTemperature: Double? = 94.0, temperatureUnit: String? = "celsius", brewTime: Double? = 180.0, notes: String? = nil, rating: Int? = nil) {
+    init(id: UUID = UUID(), timestamp: Date = Date(), coffeeName: String = "Sample Coffee", dose: Double = 18.0, grindSetting: String = "Medium", waterAmount: Double = 250.0, method: String = "pourOver", roastLevel: String = "medium", waterTemperature: Double? = 94.0, temperatureUnit: String? = "celsius", brewTime: Double? = 180.0, notes: String? = nil, rating: Int? = nil, grinderType: String = "Fellow Ode") {
         self.id = id
         self.timestamp = timestamp
         self.coffeeName = coffeeName
@@ -32,6 +33,7 @@ struct BrewLog: Identifiable, Codable, Hashable { // Add Codable back for persis
         self.brewTime = brewTime
         self.notes = notes
         self.rating = rating
+        self.grinderType = grinderType
     }
     
     // Example static data for previews
